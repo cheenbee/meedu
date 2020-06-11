@@ -36,10 +36,6 @@
         </div>
     @endforeach
 
-    <div class="inspire">
-        <p class="mb-0">拥抱慕课微课 拥抱在线教育时代</p>
-    </div>
-
     <footer class="index-footer">
         <p>© {{date('Y')}} {{config('app.name')}} · <a href="http://www.beian.miit.gov.cn"
                                                        target="_blank">{{$gConfig['system']['icp']}}</a></p>

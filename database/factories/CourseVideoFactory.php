@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Qsnh/meedu.
+ *
+ * (c) XiaoTeng <616896861@qq.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 use Faker\Generator as Faker;
 
 $factory->define(\App\Services\Course\Models\Video::class, function (Faker $faker) {
@@ -18,14 +27,14 @@ $factory->define(\App\Services\Course\Models\Video::class, function (Faker $fake
         'slug' => $faker->slug(),
         'url' => $faker->url,
         'view_num' => $faker->randomDigit,
-        'charge' => mt_rand(0, 1000),
+        'charge' => random_int(0, 1000),
         'short_description' => $faker->title,
         'original_desc' => $faker->paragraph(),
         'render_desc' => $faker->paragraph(),
         'seo_keywords' => $faker->title,
         'seo_description' => $faker->title,
         'published_at' => $faker->dateTime('now'),
-        'is_show' => $faker->randomElement([\App\Models\Video::IS_SHOW_NO, \App\Models\Video::IS_SHOW_YES]),
-        'duration' => mt_rand(200, 10000),
+        'is_show' => $faker->randomElement([\App\Services\Course\Models\Video::IS_SHOW_NO, \App\Services\Course\Models\Video::IS_SHOW_YES]),
+        'duration' => random_int(200, 10000),
     ];
 });

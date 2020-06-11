@@ -77,15 +77,6 @@
             </div>
         </div>
     @endforeach
-
-    <div class="container inspire">
-        <div class="row">
-            <div class="col-12">
-                <span>拥抱慕课微课 拥抱在线教育时代</span>
-            </div>
-        </div>
-    </div>
-
     <div class="container-fluid friend-link-box">
         <div class="container">
             <div class="row">

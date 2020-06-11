@@ -4,7 +4,9 @@
 namespace Tests\Feature\BackendApi;
 
 use App\Models\Administrator;
+use App\Models\AdministratorRole;
 use App\Services\Order\Models\PromoCode;
+use Illuminate\Support\Facades\DB;
 
 class PromoCodeTest extends Base
 {
@@ -21,11 +23,17 @@ class PromoCodeTest extends Base
     ];
 
     protected $admin;
+    protected $role;
 
     public function setUp()
     {
         parent::setUp();
         $this->admin = factory(Administrator::class)->create();
+        $this->role = factory(AdministratorRole::class)->create();
+        DB::table('administrator_role_relation')->insert([
+            'administrator_id' => $this->admin->id,
+            'role_id' => $this->role->id,
+        ]);
     }
 
     public function tearDown()
@@ -71,7 +79,9 @@ class PromoCodeTest extends Base
     public function test_destroy()
     {
         $item = factory(self::MODEL)->create();
-        $response = $this->user($this->admin)->delete(self::API_V1_PREFIX . '/' . self::MODEL_NAME . '/' . $item->id);
+        $response = $this->user($this->admin)->post(self::API_V1_PREFIX . '/' . self::MODEL_NAME . '/delete/multi', [
+            'ids' => [$item->id],
+        ]);
         $this->assertResponseSuccess($response);
         $model = self::MODEL;
         $this->assertEmpty($model::find($item->id));

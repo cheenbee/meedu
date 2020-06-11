@@ -300,7 +300,7 @@ class UserServiceTest extends TestCase
             'invite_user_reward' => 60,
             'invited_user_reward' => 12,
         ]);
-        $this->service->updateInviteUserId($user1->id, $promoCode->toArray());
+        $this->service->updateInviteUserId($user1->id, $promoCode['user_id'], $promoCode['invite_user_reward']);
 
         $user->refresh();
         $this->assertEquals(60, $user->invite_balance);
@@ -344,4 +344,29 @@ class UserServiceTest extends TestCase
         $this->assertEquals(7, $user->invite_balance);
     }
 
+    public function test_setUsedPromoCode()
+    {
+        $user = factory(User::class)->create(['is_used_promo_code' => 0]);
+        $this->service->setUsedPromoCode($user->id);
+        $user->refresh();
+        $this->assertEquals(1, $user->is_used_promo_code);
+    }
+
+    public function test_changeMobile()
+    {
+        $user = factory(User::class)->create(['mobile' => '199000012341']);
+        $this->service->changeMobile($user->id, '188999900011');
+        $user->refresh();
+        $this->assertEquals('188999900011', $user->mobile);
+    }
+
+    /**
+     * @expectedException App\Exceptions\ServiceException
+     */
+    public function test_changeMobile_exists()
+    {
+        $user = factory(User::class)->create(['mobile' => '199000012341']);
+        $user = factory(User::class)->create(['mobile' => '13788889999']);
+        $this->service->changeMobile($user->id, '13788889999');
+    }
 }

@@ -11,14 +11,20 @@
 
 namespace App\Http\Controllers\Backend\Api\V1;
 
+use Illuminate\Http\Request;
 use App\Services\Order\Models\PromoCode;
 use App\Http\Requests\Backend\PromoCodeRequest;
 
 class PromoCodeController extends BaseController
 {
-    public function index()
+    public function index(Request $request)
     {
-        $items = PromoCode::orderByDesc('id')->paginate(12);
+        $key = $request->input('key');
+        $items = PromoCode::query()->when($key, function ($query) use ($key) {
+            $query->where('code', 'like', $key . '%');
+        })
+            ->orderByDesc('id')
+            ->paginate($request->input('size', 20));
 
         return $this->successData($items);
     }
@@ -45,9 +51,10 @@ class PromoCodeController extends BaseController
         return $this->success();
     }
 
-    public function destroy($id)
+    public function destroy(Request $request)
     {
-        PromoCode::destroy($id);
+        $ids = $request->input('ids', []);
+        $ids && PromoCode::destroy($ids);
 
         return $this->success();
     }

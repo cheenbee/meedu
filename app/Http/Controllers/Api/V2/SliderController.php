@@ -22,7 +22,7 @@ class SliderController extends BaseController
      * @OA\Get(
      *     path="/sliders",
      *     summary="幻灯片",
-     *     tags={"role"},
+     *     tags={"其它"},
      *     @OA\Response(
      *         description="",response=200,
      *         @OA\JsonContent(
@@ -36,6 +36,9 @@ class SliderController extends BaseController
      */
     public function all(SliderServiceInterface $sliderService)
     {
+        /**
+         * @var SliderService $sliderService
+         */
         $sliders = $sliderService->all();
         $sliders = arr2_clear($sliders, ApiV2Constant::MODEL_SLIDER_FIELD);
         return $this->data($sliders);

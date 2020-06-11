@@ -203,6 +203,24 @@ class UserService implements UserServiceInterface
     }
 
     /**
+     * 更换手机号
+     *
+     * @param integer $userId
+     * @param string $mobile
+     * @return void
+     */
+    public function changeMobile(int $userId, string $mobile): void
+    {
+        $exists = $this->findMobile($mobile);
+        if ($exists) {
+            throw new ServiceException(__('mobile has exists'));
+        }
+        $user = User::findOrFail($userId);
+        $user->mobile = $mobile;
+        $user->save();
+    }
+
+    /**
      * @param $userId
      * @param $avatar
      */
@@ -369,22 +387,23 @@ class UserService implements UserServiceInterface
 
     /**
      * @param int $id
-     * @param array $promoCode
+     * @param $userId
+     * @param int $reward
      * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
-    public function updateInviteUserId(int $id, array $promoCode): void
+    public function updateInviteUserId(int $id, $userId, $reward = 0): void
     {
         $inviteConfig = $this->configService->getMemberInviteConfig();
         $expiredDays = $inviteConfig['effective_days'] ?? 0;
         User::whereId($id)->update([
-            'invite_user_id' => $promoCode['user_id'],
+            'invite_user_id' => $userId,
             'invite_user_expired_at' => $expiredDays ? Carbon::now()->addDays($expiredDays) : null,
         ]);
         /**
          * @var $userInviteBalanceService UserInviteBalanceService
          */
         $userInviteBalanceService = app()->make(UserInviteBalanceServiceInterface::class);
-        $userInviteBalanceService->createInvite($promoCode['user_id'], $promoCode['invite_user_reward']);
+        $userInviteBalanceService->createInvite($userId, $reward);
     }
 
     /**
@@ -428,6 +447,17 @@ class UserService implements UserServiceInterface
     public function notificationMarkAllAsRead(int $userId): void
     {
         User::find($userId)->unreadNotifications->markAsRead();
+    }
+
+    /**
+     * 未读消息数量
+     *
+     * @param integer $userId
+     * @return int
+     */
+    public function unreadNotificationCount(int $userId): int
+    {
+        return (int)User::find($userId)->unreadNotifications->count();
     }
 
     /**
@@ -486,28 +516,30 @@ class UserService implements UserServiceInterface
      */
     public function recordUserVideoWatch(int $userId, int $courseId, int $videoId, int $duration, bool $isWatched): void
     {
-        $record = UserVideoWatchRecord::query()->where('user_id', $userId)->where('course_id', $courseId)->where('video_id', $videoId)->first();
+        $record = UserVideoWatchRecord::query()
+            ->where('user_id', $userId)
+            ->where('course_id', $courseId)
+            ->where('video_id', $videoId)
+            ->first();
+
         if ($record) {
             if ($record->watched_at === null && $record->watch_seconds < $duration) {
                 // 如果有记录，那么在没有看完的情况下继续记录
                 $data = ['watch_seconds' => $duration];
                 $isWatched && $data['watched_at'] = Carbon::now();
                 $record->fill($data)->save();
-
-                // 视频看完事件
-                $isWatched && event(new UserVideoWatchedEvent($userId, $videoId));
             }
-            return;
+        } else {
+            UserVideoWatchRecord::create([
+                'user_id' => $userId,
+                'course_id' => $courseId,
+                'video_id' => $videoId,
+                'watch_seconds' => $duration,
+                'watched_at' => $isWatched ? Carbon::now() : null,
+            ]);
         }
 
-        UserVideoWatchRecord::create([
-            'user_id' => $userId,
-            'course_id' => $courseId,
-            'video_id' => $videoId,
-            'watch_seconds' => $duration,
-            'watched_at' => $isWatched ? Carbon::now() : null,
-        ]);
-
+        // 视频看完event
         $isWatched && event(new UserVideoWatchedEvent($userId, $videoId));
     }
 
@@ -521,5 +553,55 @@ class UserService implements UserServiceInterface
     {
         $records = UserVideoWatchRecord::query()->where('user_id', $userId)->where('course_id', $courseId)->get();
         return $records->toArray();
+    }
+
+    /**
+     * 获取课程的最新一条观看记录
+     * @param int $userId
+     * @param int $courseId
+     * @return array
+     */
+    public function getLatestRecord(int $userId, int $courseId): array
+    {
+        $record = UserVideoWatchRecord::query()->where('user_id', $userId)->where('course_id', $courseId)->orderByDesc('updated_at')->first();
+        return $record ? $record->toArray() : [];
+    }
+
+    /**
+     * @param int $id
+     */
+    public function setUsedPromoCode(int $id): void
+    {
+        User::query()->where('id', $id)->update(['is_used_promo_code' => 1]);
+    }
+
+    /**
+     * @param int $id
+     * @param string $ip
+     */
+    public function setRegisterIp(int $id, string $ip): void
+    {
+        User::query()->where('id', $id)->update(['register_ip' => $ip]);
+    }
+
+    /**
+     * @param int $id
+     * @param string $area
+     */
+    public function setRegisterArea(int $id, string $area): void
+    {
+        $area && User::query()->where('id', $id)->update(['register_area' => $area]);
+    }
+
+    /**
+     * 重置会员过期用户
+     *
+     * @return int
+     */
+    public function resetRoleExpiredUsers(): int
+    {
+        return User::query()
+            ->where('role_expired_at', '<=', Carbon::now())
+            ->update(['role_id' => 0, 'role_expired_at' => null]);
     }
 }

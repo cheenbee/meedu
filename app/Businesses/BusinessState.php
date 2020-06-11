@@ -36,11 +36,11 @@ class BusinessState
     public function canSeeVideo(array $user, array $course, array $video): bool
     {
         /**
-         * @var $userService UserService
+         * @var UserService $userService
          */
         $userService = app()->make(UserServiceInterface::class);
         // 如果video的价格为0那么可以直接观看
-        if ($video['charge'] == 0) {
+        if ($video['charge'] === 0) {
             return true;
         }
         // 如果用户买了课程可以直接观看
@@ -52,7 +52,7 @@ class BusinessState
             return true;
         }
         // 如果用户买了会员可以直接观看
-        if ($user['role_id'] && Carbon::now()->lt($user['role_expired_at'])) {
+        if ($this->isRole($user)) {
             return true;
         }
         return false;
@@ -67,7 +67,7 @@ class BusinessState
      */
     public function orderIsPaid(array $order): bool
     {
-        return $order['status'] == FrontendConstant::ORDER_PAID;
+        return $order['status'] === FrontendConstant::ORDER_PAID;
     }
 
     /**
@@ -118,7 +118,7 @@ class BusinessState
         $promoCodeService = app()->make(PromoCodeServiceInterface::class);
         $inviteConfig = $configService->getMemberInviteConfig();
         $isRole = $this->isRole($user);
-        if ($inviteConfig['free_user_enabled'] == false && !$isRole) {
+        if ((bool)$inviteConfig['free_user_enabled'] === false && !$isRole) {
             // 开启了非会员无法生成优惠码
             return false;
         }
@@ -163,7 +163,7 @@ class BusinessState
          */
         $userService = app()->make(UserServiceInterface::class);
         $user = $userService->find(Auth::id());
-        if ($user['invite_user_id']) {
+        if ($user['is_used_promo_code'] === FrontendConstant::YES) {
             // 用户邀请优惠码只能使用一次
             return false;
         }
@@ -197,20 +197,20 @@ class BusinessState
     /**
      * 是否购买了课程
      *
-     * @param int $courseId
-     * @return bool
-     * @throws \Illuminate\Contracts\Container\BindingResolutionException
+     * @param integer $userId
+     * @param integer $courseId
+     * @return boolean
      */
-    public function isBuyCourse(int $courseId): bool
+    public function isBuyCourse(int $userId, int $courseId): bool
     {
-        if (!Auth::check()) {
+        if (!$userId) {
             return false;
         }
         /**
          * @var $userService UserService
          */
         $userService = app()->make(UserServiceInterface::class);
-        $user = $userService->find(Auth::id(), ['role']);
+        $user = $userService->find($userId, ['role']);
         if ($this->isRole($user)) {
             return true;
         }
