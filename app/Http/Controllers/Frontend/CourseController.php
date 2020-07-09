@@ -149,6 +149,9 @@ class CourseController extends FrontendController
         $keywords = $course['seo_keywords'];
         $description = $course['seo_description'];
 
+        // 课程附件
+        $attach = $this->courseService->getCourseAttach($course['id']);
+
         // 是否购买
         $isBuy = false;
         // 喜欢课程
@@ -157,18 +160,20 @@ class CourseController extends FrontendController
         $firstVideo = [];
         // 课程视频观看进度
         $videoWatchedProgress = [];
+        // 课程评论
+        $canComment = $this->businessState->courseCanComment($this->user(), $course);
 
         // 已登录用户的一些判断
         if (Auth::check()) {
             // 是否购买
-            $isBuy = $this->businessState->isBuyCourse(Auth::id(), $course['id']);
+            $isBuy = $this->businessState->isBuyCourse($this->id(), $course['id']);
             // 是否收藏当前课程
-            $isLikeCourse = $this->userService->likeCourseStatus(Auth::id(), $course['id']);
+            $isLikeCourse = $this->userService->likeCourseStatus($this->id(), $course['id']);
             // 课程视频观看进度
-            $userVideoWatchRecords = $this->userService->getUserVideoWatchRecords(Auth::id(), $course['id']);
+            $userVideoWatchRecords = $this->userService->getUserVideoWatchRecords($this->id(), $course['id']);
             $videoWatchedProgress = array_column($userVideoWatchRecords, null, 'video_id');
             // 最近一条观看记录
-            $latestWatchRecord = $this->userService->getLatestRecord(Auth::id(), $course['id']);
+            $latestWatchRecord = $this->userService->getLatestRecord($this->id(), $course['id']);
             $latestWatchRecord && $firstVideo = $this->videoService->find($latestWatchRecord['video_id']);
         }
 
@@ -195,7 +200,9 @@ class CourseController extends FrontendController
             'isLikeCourse',
             'firstVideo',
             'scene',
-            'videoWatchedProgress'
+            'videoWatchedProgress',
+            'attach',
+            'canComment'
         ));
     }
 
@@ -241,5 +248,15 @@ class CourseController extends FrontendController
         $payment = $request->input('payment_sign');
 
         return redirect(route('order.pay', ['scene' => $paymentScene, 'payment' => $payment, 'order_id' => $order['order_id']]));
+    }
+
+    public function attachDownload($id)
+    {
+        $courseAttach = $this->courseService->getAttach($id);
+        if (!$this->businessState->isBuyCourse(Auth::id(), $courseAttach['course_id'])) {
+            abort(403, __('please buy course'));
+        }
+        $this->courseService->courseAttachDownloadTimesInc($courseAttach['id']);
+        return response()->download(storage_path('app/attach/' . $courseAttach['path']));
     }
 }

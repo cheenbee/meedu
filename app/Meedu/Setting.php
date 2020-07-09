@@ -11,66 +11,44 @@
 
 namespace App\Meedu;
 
-use Illuminate\Http\Request;
-use Illuminate\Filesystem\Filesystem;
+use App\Services\Base\Services\ConfigService;
+use App\Services\Base\Interfaces\ConfigServiceInterface;
 
 class Setting
 {
     const VERSION = 1;
-    protected $files;
-    protected $dist;
 
-    public function __construct()
+    /**
+     * @var ConfigService
+     */
+    protected $configService;
+
+    /**
+     * Setting constructor.
+     * @param ConfigServiceInterface $configService
+     */
+    public function __construct(ConfigServiceInterface $configService)
     {
-        $this->files = new Filesystem();
-        $this->dist = config('meedu.save');
+        $this->configService = $configService;
     }
 
     /**
-     * @param $param
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * 追加配置（用来写入部分配置）
+     * @param $config
      */
-    public function save($param)
+    public function append($config): void
     {
-        $data = $param;
-        if ($data instanceof Request) {
-            $data = $param->all();
-        }
-        $data['version'] = self::VERSION;
-        $this->put($data);
+        $this->put($config);
     }
 
     /**
-     * @param $params
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * 将配置同步到laravel中
      */
-    public function append($params)
+    public function sync(): void
     {
-        foreach ($params as $key => $item) {
+        $config = $this->get();
+        foreach ($config as $key => $item) {
             config([$key => $item]);
-        }
-        $this->put($this->getCanEditConfig());
-    }
-
-    /**
-     * 自定义配置同步到Laravel系统中.
-     */
-    public function sync()
-    {
-        $saveConfig = $this->get();
-        if (!isset($saveConfig['version'])) {
-            // 老版本的配置保存方式
-            collect($this->get())->map(function ($item, $key) {
-                config([$key => $item]);
-            });
-        } else {
-            // v1版本的配置保存方式
-            if ((int)$saveConfig['version'] === self::VERSION) {
-                $arr = array_compress($saveConfig);
-                foreach ($arr as $key => $item) {
-                    config([$key => $item]);
-                }
-            }
         }
         $this->specialSync();
     }
@@ -85,33 +63,31 @@ class Setting
     }
 
     /**
-     * 修改配置.
-     *
+     * 保存配置
      * @param array $setting
-     *
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function put(array $setting): void
     {
-        $this->files->put($this->dist, json_encode($setting));
+        $setting = $this->removeUnChange($setting);
+        $this->configService->setConfig($setting);
     }
 
     /**
-     * 读取自定义配置.
-     *
+     * 读取配置
      * @return array
-     *
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function get(): array
     {
-        if (!$this->files->exists($this->dist)) {
+        try {
+            $config = $this->configService->all();
+            $data = [];
+            foreach ($config as $item) {
+                $data[$item['key']] = $item['value'];
+            }
+            return $data;
+        } catch (\Exception $e) {
             return [];
         }
-        $jsonContent = $this->files->get($this->dist);
-        $arrayContent = json_decode($jsonContent, true);
-
-        return $arrayContent;
     }
 
     /**
@@ -120,16 +96,21 @@ class Setting
      */
     public function getCanEditConfig(): array
     {
-        $meedu = config('meedu');
-        $config = [
-            'app' => config('app'),
-            'meedu' => $meedu,
-            'sms' => config('sms'),
-            'services' => config('services'),
-            'pay' => config('pay'),
-            'tencent' => config('tencent'),
-            'filesystems' => config('filesystems'),
-        ];
+        return $this->configService->all();
+    }
+
+    /**
+     * @param array $config
+     * @return array
+     */
+    protected function removeUnChange(array $config): array
+    {
+        $privateVal = str_pad('', 12, '*');
+        foreach ($config as $key => $val) {
+            if ($val === $privateVal) {
+                unset($config[$key]);
+            }
+        }
         return $config;
     }
 }

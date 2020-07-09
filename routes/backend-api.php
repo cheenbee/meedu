@@ -1,9 +1,17 @@
 <?php
 
+/*
+ * This file is part of the Qsnh/meedu.
+ *
+ * (c) XiaoTeng <616896861@qq.com>
+ *
+ * This source file is subject to the MIT license that is bundled
+ * with this source code in the file LICENSE.
+ */
+
 Route::post('/login', 'LoginController@login');
 
 Route::group(['middleware' => ['auth:administrator', 'backend.permission']], function () {
-
     Route::get('/user', 'LoginController@user');
     Route::get('/menus', 'LoginController@menus');
 
@@ -132,6 +140,13 @@ Route::group(['middleware' => ['auth:administrator', 'backend.permission']], fun
         Route::get('/{id}/subscribe/users', 'CourseController@subscribeUsers');
     });
 
+    // 课程
+    Route::group(['prefix' => 'course_attach'], function () {
+        Route::get('/', 'CourseAttachController@index');
+        Route::post('/', 'CourseAttachController@store');
+        Route::delete('/{id}', 'CourseAttachController@destroy');
+    });
+
     // 视频
     Route::group(['prefix' => 'video'], function () {
         Route::get('/', 'CourseVideoController@index');
@@ -140,6 +155,7 @@ Route::group(['middleware' => ['auth:administrator', 'backend.permission']], fun
         Route::get('/{id}', 'CourseVideoController@edit');
         Route::put('/{id}', 'CourseVideoController@update');
         Route::delete('/{id}', 'CourseVideoController@destroy');
+        Route::post('/delete/multi', 'CourseVideoController@multiDestroy');
     });
 
     // 会员
@@ -157,11 +173,14 @@ Route::group(['middleware' => ['auth:administrator', 'backend.permission']], fun
         Route::get('/{id}/detail/userHistory', 'MemberController@userHistory');
         Route::get('/{id}/detail/userOrders', 'MemberController@userOrders');
         Route::get('/{id}/detail/userInvite', 'MemberController@userInvite');
+        Route::get('/{id}/detail/credit1Records', 'MemberController@credit1Records');
 
         Route::post('/', 'MemberController@store');
         Route::put('/{id}', 'MemberController@update');
         Route::get('/inviteBalance/withdrawOrders', 'MemberController@inviteBalanceWithdrawOrders');
         Route::post('/inviteBalance/withdrawOrders', 'MemberController@inviteBalanceWithdrawOrderHandle');
+
+        Route::post('/credit1/change', 'MemberController@credit1Change');
     });
 
     // 网站配置

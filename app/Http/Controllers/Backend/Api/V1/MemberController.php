@@ -14,6 +14,7 @@ namespace App\Http\Controllers\Backend\Api\V1;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Services\Member\Models\Role;
 use App\Services\Member\Models\User;
 use App\Services\Order\Models\Order;
@@ -25,6 +26,7 @@ use App\Services\Member\Models\UserCourse;
 use App\Http\Requests\Backend\MemberRequest;
 use App\Services\Member\Models\UserLikeCourse;
 use App\Services\Course\Models\CourseUserRecord;
+use App\Services\Member\Models\UserCreditRecord;
 use App\Services\Member\Models\UserJoinRoleRecord;
 use App\Events\UserInviteBalanceWithdrawHandledEvent;
 use App\Services\Member\Models\UserInviteBalanceWithdrawOrder;
@@ -108,6 +110,7 @@ class MemberController extends BaseController
             'is_lock', 'is_active', 'role_id', 'role_expired_at',
             'invite_user_id', 'invite_balance', 'invite_user_expired_at',
         ]);
+        $data['role_id'] = (int)($data['role_id'] ?? 0);
         ($data['password'] ?? '') && $data['password'] = Hash::make($data['password']);
         $user->fill($data)->save();
         return $this->success();
@@ -202,5 +205,39 @@ class MemberController extends BaseController
         return $this->successData([
             'data' => $data,
         ]);
+    }
+
+    public function credit1Records(Request $request, $id)
+    {
+        $records = UserCreditRecord::query()
+            ->where('user_id', $id)
+            ->where('field', 'credit1')
+            ->orderByDesc('id')
+            ->paginate($request->input('size', 20));
+        return $this->successData([
+            'data' => $records,
+        ]);
+    }
+
+    public function credit1Change(Request $request)
+    {
+        $userId = $request->input('user_id');
+        $credit1 = $request->input('credit1');
+        $remark = $request->input('remark', '');
+        DB::transaction(function () use ($userId, $credit1, $remark) {
+            $user = User::query()->where('id', $userId)->firstOrFail();
+
+            $user->credit1 += $credit1;
+            $user->save();
+
+            UserCreditRecord::create([
+                'user_id' => $userId,
+                'field' => 'credit1',
+                'sum' => $credit1,
+                'remark' => $remark,
+            ]);
+        });
+
+        return $this->success();
     }
 }

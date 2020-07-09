@@ -523,8 +523,8 @@ class UserService implements UserServiceInterface
             ->first();
 
         if ($record) {
-            if ($record->watched_at === null && $record->watch_seconds < $duration) {
-                // 如果有记录，那么在没有看完的情况下继续记录
+            if ($record->watched_at === null && $record->watch_seconds <= $duration) {
+                // 如果有记录[没看完 && 当前时间超过已记录的时间]
                 $data = ['watch_seconds' => $duration];
                 $isWatched && $data['watched_at'] = Carbon::now();
                 $record->fill($data)->save();

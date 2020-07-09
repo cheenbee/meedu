@@ -98,19 +98,22 @@ class AjaxController extends BaseController
     }
 
     /**
-     * 课程评论.
-     *
      * @param CourseOrVideoCommentCreateRequest $request
      * @param $courseId
-     *
-     * @return array
+     * @return \Illuminate\Http\JsonResponse
      */
     public function courseCommentHandler(CourseOrVideoCommentCreateRequest $request, $courseId)
     {
+        $user = $this->user();
         $course = $this->courseService->find($courseId);
+        if ($this->businessState->courseCanComment($user, $course) === false) {
+            return $this->error(__('course cant comment'));
+        }
+
         ['content' => $content] = $request->filldata();
         $comment = $this->courseCommentService->create($course['id'], $content);
-        $user = $this->userService->find(Auth::id(), ['role']);
+
+        $user = $this->userService->find($this->id(), ['role']);
 
         return $this->data([
             'content' => $comment['render_content'],
@@ -124,16 +127,16 @@ class AjaxController extends BaseController
     }
 
     /**
-     * 视频评论.
-     *
      * @param CourseOrVideoCommentCreateRequest $request
      * @param $videoId
-     *
-     * @return array
+     * @return \Illuminate\Http\JsonResponse
      */
     public function videoCommentHandler(CourseOrVideoCommentCreateRequest $request, $videoId)
     {
         $video = $this->videoService->find($videoId);
+        if ($this->businessState->videoCanComment($this->user(), $video) === false) {
+            return $this->error(__('video cant comment'));
+        }
         ['content' => $content] = $request->filldata();
         $comment = $this->videoCommentService->create($video['id'], $content);
         $user = $this->userService->find(Auth::id(), ['role']);
@@ -150,8 +153,6 @@ class AjaxController extends BaseController
     }
 
     /**
-     * 邀请码检测
-     *
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      * @throws \Illuminate\Contracts\Container\BindingResolutionException
@@ -179,8 +180,6 @@ class AjaxController extends BaseController
     }
 
     /**
-     * 密码登录
-     *
      * @param LoginPasswordRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -205,8 +204,6 @@ class AjaxController extends BaseController
     }
 
     /**
-     * 手机号登录
-     *
      * @param MobileLoginRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -229,8 +226,6 @@ class AjaxController extends BaseController
     }
 
     /**
-     * 注册
-     *
      * @param RegisterPasswordRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -255,8 +250,6 @@ class AjaxController extends BaseController
     }
 
     /**
-     * 修改密码
-     *
      * @param PasswordResetRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -273,10 +266,8 @@ class AjaxController extends BaseController
     }
 
     /**
-     * 手机号绑定
-     *
      * @param MobileBindRequest $request
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @return \Illuminate\Http\JsonResponse
      * @throws \App\Exceptions\ServiceException
      */
     public function mobileBind(MobileBindRequest $request)
@@ -286,9 +277,6 @@ class AjaxController extends BaseController
         return $this->success();
     }
 
-    /**
-     * @return \Illuminate\Contracts\Routing\UrlGenerator|\Illuminate\Session\SessionManager|\Illuminate\Session\Store|mixed|string
-     */
     protected function redirectTo()
     {
         $callbackUrl = session()->has(FrontendConstant::LOGIN_CALLBACK_URL_KEY) ?
@@ -297,8 +285,6 @@ class AjaxController extends BaseController
     }
 
     /**
-     * 修改密码
-     *
      * @param MemberPasswordResetRequest $request
      * @return \Illuminate\Http\JsonResponse
      * @throws \Exception
@@ -311,8 +297,6 @@ class AjaxController extends BaseController
     }
 
     /**
-     * 修改头像
-     *
      * @param AvatarChangeRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -324,8 +308,6 @@ class AjaxController extends BaseController
     }
 
     /**
-     * 修改昵称
-     *
      * @param NicknameChangeRequest $request
      * @return \Illuminate\Http\JsonResponse
      * @throws \App\Exceptions\ServiceException
@@ -338,8 +320,6 @@ class AjaxController extends BaseController
     }
 
     /**
-     * 消息标记已读
-     *
      * @param ReadAMessageRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -351,8 +331,6 @@ class AjaxController extends BaseController
     }
 
     /**
-     * 邀请余额提现
-     *
      * @param InviteBalanceWithdrawRequest $request
      * @return \Illuminate\Http\JsonResponse
      * @throws \App\Exceptions\ServiceException
@@ -370,8 +348,6 @@ class AjaxController extends BaseController
     }
 
     /**
-     * 收藏课程
-     *
      * @param $id
      * @return \Illuminate\Http\JsonResponse
      */

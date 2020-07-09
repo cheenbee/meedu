@@ -52,4 +52,15 @@ class FrontendConstant
     const ORDER_GOODS_TYPE_BOOK = 'BOOK';
 
     const API_GUARD = 'apiv2';
+
+    public const CREDIT1_REMARK_REGISTER = 'credit1_remark_register';
+    public const CREDIT1_REMARK_WATCHED_COURSE = 'credit1_remark_watched_course';
+    public const CREDIT1_REMARK_WATCHED_VIDEO = 'credit1_remark_watched_video';
+    public const CREDIT1_REMARK_WATCHED_ORDER = 'credit1_remark_order';
+    public const CREDIT1_REMARK_WATCHED_INVITE = 'credit1_remark_invite';
+    public const CREDIT1_REMARK_WATCHED_OTHER = 'credit1_remark_other';
+
+    public const PLAYER_XG = 'xg';
+    public const PLAYER_TENCENT = 'tencent';
+    public const PLAYER_ALIYUN = 'aliyun';
 }

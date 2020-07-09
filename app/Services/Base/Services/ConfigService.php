@@ -12,19 +12,61 @@
 namespace App\Services\Base\Services;
 
 use App\Constant\FrontendConstant;
+use App\Services\Base\Model\AppConfig;
 use App\Services\Base\Interfaces\ConfigServiceInterface;
 
 class ConfigService implements ConfigServiceInterface
 {
+
+    /**
+     * @return int
+     */
+    public function getWatchedVideoSceneCredit1(): int
+    {
+        return (int)config('meedu.member.credit1.watched_video');
+    }
+
+    /**
+     * @return int
+     */
+    public function getWatchedCourseSceneCredit1(): int
+    {
+        return (int)config('meedu.member.credit1.watched_course');
+    }
+
+    /**
+     * @return int
+     */
+    public function getPaidOrderSceneCredit1(): int
+    {
+        return (int)config('meedu.member.credit1.paid_order');
+    }
+
+    /**
+     * @return int
+     */
+    public function getRegisterSceneCredit1(): int
+    {
+        return (int)config('meedu.member.credit1.register');
+    }
+
+    /**
+     * @return int
+     */
+    public function getInviteSceneCredit1(): int
+    {
+        return (int)config('meedu.member.credit1.invite');
+    }
+
     /**
      * 获取服务配置
      *
      * @param string $app
      * @return array
      */
-    public function getServiceConfig(string $app):array
+    public function getServiceConfig(string $app): array
     {
-        return config('services.'.$app, []);
+        return config('services.' . $app, []);
     }
 
     /**
@@ -42,7 +84,7 @@ class ConfigService implements ConfigServiceInterface
      *
      * @return string
      */
-    public function getIcp():string
+    public function getIcp(): string
     {
         return config('meedu.system.icp', '');
     }
@@ -52,7 +94,7 @@ class ConfigService implements ConfigServiceInterface
      *
      * @return string
      */
-    public function getPlayerCover():string
+    public function getPlayerCover(): string
     {
         return config('meedu.system.player_thumb', '');
     }
@@ -62,7 +104,7 @@ class ConfigService implements ConfigServiceInterface
      *
      * @return array
      */
-    public function getPlayer():array
+    public function getPlayer(): array
     {
         return config('meedu.system.player');
     }
@@ -90,6 +132,15 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /**
+     * 获取用户隐私协议
+     * @return string
+     */
+    public function getMemberPrivateProtocol(): string
+    {
+        return config('meedu.member.private_protocol', '');
+    }
+
+    /**
      * 关于我们
      * @return string
      */
@@ -113,7 +164,7 @@ class ConfigService implements ConfigServiceInterface
      */
     public function getMemberLockStatus(): int
     {
-        return config('meedu.member.is_lock_default');
+        return (int)config('meedu.member.is_lock_default');
     }
 
     /**
@@ -122,7 +173,7 @@ class ConfigService implements ConfigServiceInterface
      */
     public function getMemberActiveStatus(): int
     {
-        return config('meedu.member.is_active_default');
+        return (int)config('meedu.member.is_active_default');
     }
 
     /**
@@ -131,7 +182,7 @@ class ConfigService implements ConfigServiceInterface
      */
     public function getCourseListPageSize(): int
     {
-        return config('meedu.other.course_list_page_size', 6);
+        return (int)config('meedu.other.course_list_page_size', 6);
     }
 
     /**
@@ -149,7 +200,7 @@ class ConfigService implements ConfigServiceInterface
      */
     public function getVideoListPageSize(): int
     {
-        return config('meedu.other.video_list_page_size', 10);
+        return (int)config('meedu.other.video_list_page_size', 10);
     }
 
     /**
@@ -221,7 +272,7 @@ class ConfigService implements ConfigServiceInterface
      */
     public function getCacheStatus(): bool
     {
-        return (int) config('meedu.system.cache.status') === FrontendConstant::YES;
+        return (int)config('meedu.system.cache.status') === FrontendConstant::YES;
     }
 
     /**
@@ -231,7 +282,7 @@ class ConfigService implements ConfigServiceInterface
      */
     public function getCacheExpire(): int
     {
-        return config('meedu.system.cache.expire');
+        return (int)config('meedu.system.cache.expire');
     }
 
     /**
@@ -351,7 +402,7 @@ class ConfigService implements ConfigServiceInterface
      *
      * @return integer
      */
-    public function getEnabledMobileBindAlert():int
+    public function getEnabledMobileBindAlert(): int
     {
         return (int)config('meedu.member.enabled_mobile_bind_alert', 0);
     }
@@ -393,6 +444,49 @@ class ConfigService implements ConfigServiceInterface
      */
     public function getAliyunPrivatePlayStatus(): bool
     {
-        return (int) config('meedu.system.player.enabled_aliyun_private') === 1;
+        return (int)config('meedu.system.player.enabled_aliyun_private') === 1;
+    }
+
+    /**
+     * 获取所有配置
+     * @return array
+     */
+    public function all(): array
+    {
+        return AppConfig::query()->orderBy('sort')->get()->toArray();
+    }
+
+    /**
+     * 检测配置是否存在
+     * @param string $key
+     * @return bool
+     */
+    public function isConfigExists(string $key): bool
+    {
+        return AppConfig::query()->where('key', $key)->exists();
+    }
+
+    /**
+     * 写入配置
+     * @param array $config
+     */
+    public function setConfig(array $config): void
+    {
+        $data = array_column($this->all(), 'key');
+        foreach ($config as $key => $value) {
+            if (!in_array($key, $data)) {
+                continue;
+            }
+            AppConfig::query()->where('key', $key)->update(['value' => $value]);
+        }
+    }
+
+    /**
+     * 获取阿里云VOD配置
+     * @return array
+     */
+    public function getAliyunVodConfig(): array
+    {
+        return config('meedu.upload.video.aliyun');
     }
 }
