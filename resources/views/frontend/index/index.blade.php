@@ -19,7 +19,7 @@
 
     <div class="container-fluid slider-box">
         <div class="container">
-            <div class="row">
+            <!-- <div class="row"> -->
                 <div class="col-12">
                     <div class="swiper-container">
                         <div class="swiper-wrapper">
@@ -39,7 +39,7 @@
                         </div>
                     </div>
                 @endif
-            </div>
+            <!-- </div> -->
         </div>
     </div>
 
@@ -100,13 +100,6 @@
     <script>
         var mySwiper = new Swiper('.swiper-container', {
             width: window.innerWidth,
-            //窗口缩放时设置width
-            on: {
-                resize: function () {
-                    this.params.width = window.innerWidth;
-                    this.update();
-                },
-            },
             // 自动轮播
             autoplay: true,
             // 轮播效果
