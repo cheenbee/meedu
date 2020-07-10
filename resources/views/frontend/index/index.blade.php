@@ -2,7 +2,7 @@
 
 @section('css')
     <link crossorigin="anonymous" integrity="sha384-K6LrEaceM4QP87RzJ7R4CDXcFN4cFW/A5Q7/fEp/92c2WV+woVw9S9zKDO23sNS+"
-          href="css/swiper.min.css" rel="stylesheet">
+          href="https://lib.baomitu.com/Swiper/4.5.0/css/swiper.min.css" rel="stylesheet">
     <style>
         body {
             padding-top: 71px;
@@ -18,9 +18,9 @@
 @section('content')
 
     <div class="container-fluid slider-box">
-        <div class="container">
-            <div class="row">
-                <div class="col-12">
+        <!-- <div class="container"> -->
+            <!-- <div class="row"> -->
+                <!-- <div class="col-12"> -->
                     <div class="swiper-container">
                         <div class="swiper-wrapper">
                             @foreach($sliders as $slider)
@@ -31,7 +31,7 @@
                         </div>
                         <div class="swiper-pagination"></div>
                     </div>
-                </div>
+                <!-- </div> -->
                 @if($gAnnouncement)
                     <div class="col-12">
                         <div class="announcement-box">
@@ -39,8 +39,8 @@
                         </div>
                     </div>
                 @endif
-            </div>
-        </div>
+            <!-- </div> -->
+        <!-- </div> -->
     </div>
 
     @foreach($banners as $i => $banner)
