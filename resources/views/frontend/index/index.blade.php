@@ -20,7 +20,7 @@
     <div class="container-fluid slider-box">
         <div class="container">
             <!-- <div class="row"> -->
-                <div class="col-12">
+                <!-- <div class="col-12"> -->
                     <div class="swiper-container">
                         <div class="swiper-wrapper">
                             @foreach($sliders as $slider)
@@ -31,7 +31,7 @@
                         </div>
                         <div class="swiper-pagination"></div>
                     </div>
-                </div>
+                <!-- </div> -->
                 @if($gAnnouncement)
                     <div class="col-12">
                         <div class="announcement-box">
@@ -99,7 +99,6 @@
             src="https://lib.baomitu.com/Swiper/4.5.0/js/swiper.min.js"></script>
     <script>
         var mySwiper = new Swiper('.swiper-container', {
-            width: window.innerWidth,
             // 自动轮播
             autoplay: true,
             // 轮播效果
